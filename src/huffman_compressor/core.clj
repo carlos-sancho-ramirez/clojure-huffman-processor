@@ -114,7 +114,7 @@
   "Creates a new lazy sequence of 0s and 1s, resulting on the encoding of the given seq and using the given table"
   [table symbols]
   (let [symbol (first symbols)]
-    (if (= symbol nil) nil
+    (if (= symbol nil) '()
       (lazy-seq
         (reduce #(cons %2 %1)
           (encode table (rest symbols))
