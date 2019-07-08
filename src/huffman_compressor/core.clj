@@ -97,7 +97,7 @@
     (repeat bits 0)
     (reduce #(conj %1 %2) (repeat (- bits (count lastSeqValue)) 0) (invertSeq (incSeqValue lastSeqValue)))))
 
-(defn composeEncodingTable
+(defn composeEncodingTableFromLength
   "Creates a map keepting the keys from the given map, but providing a list of 0 or 1 in the values"
   [lengthPairsSeq]
   (loop [pairSeq lengthPairsSeq
@@ -109,6 +109,16 @@
         result
         (let [newSeq (getNextSymbolSeq lastSeq symbolBits)]
           (recur (rest pairSeq) newSeq (assoc result (get pair 0) newSeq)))))))
+
+(defn composeEncodingTableFromSymbolSeq
+  "Create a Huffman encoding table from a sequence of symbols.
+   This function will count the amount of times a symbols is
+   appearing and will assign shorter encoded symbols to the most probable symbols.
+   The resulting map will have the symbols sorted within the same symbol length in ascending order."
+  [symbols]
+  (let [frecMap (reduce #(assoc %1 %2 (inc (get %1 %2 0))) {} symbols)
+        lengthPairsSeq (sort-by #(get %1 1) (sort-by #(get %1 0) (composeLengthTable frecMap)))]
+    (composeEncodingTableFromLength lengthPairsSeq)))
 
 (defn encode
   "Creates a new lazy sequence of 0s and 1s, resulting on the encoding of the given seq and using the given table"
@@ -198,7 +208,7 @@
         outFileName "encoded.bin"
         frecMap (countChars fileName)
         lengthPairsSeq (sort-by #(get %1 1) (sort-by #(get %1 0) (composeLengthTable frecMap)))
-        encTable (composeEncodingTable lengthPairsSeq)]
+        encTable (composeEncodingTableFromLength lengthPairsSeq)]
     (println frecMap)
     (println (reduce #(+ %1 %2) 0 (vals frecMap)) "characters read")
     (println (composeTable frecMap))
