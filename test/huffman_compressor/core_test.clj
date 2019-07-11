@@ -11,12 +11,14 @@
 
 (deftest testComposeEncodingTableFromSymbolSeq
   (testing "ComposeEncodingTableFromSymbolSeq"
-    (is (= {} (composeEncodingTableFromSymbolSeq '())))
-    (is (= {\a '()} (composeEncodingTableFromSymbolSeq '(\a))))
-    (is (= {\a '()} (composeEncodingTableFromSymbolSeq '(\a \a \a))))
-    (is (= {\a '(0) \b '(1)} (composeEncodingTableFromSymbolSeq '(\a \a \b \a))))
-    (is (= {\a '(0) \b '(1)} (composeEncodingTableFromSymbolSeq '(\b \a \a))))
-    (is (= {\a '(0) \b '(1 0) \c '(1 1)} (composeEncodingTableFromSymbolSeq '(\c \b \a \a))))))
+    (let [char-< #(< (int %1) (int %2))]
+      (is (= {} (composeEncodingTableFromSymbolSeq char-< '())))
+      (is (= {\a '()} (composeEncodingTableFromSymbolSeq char-< '(\a))))
+      (is (= {\a '()} (composeEncodingTableFromSymbolSeq char-< '(\a \a \a))))
+      (is (= {\a '(0) \b '(1)} (composeEncodingTableFromSymbolSeq char-< '(\a \a \b \a))))
+      (is (= {\a '(0) \b '(1)} (composeEncodingTableFromSymbolSeq char-< '(\b \a \a))))
+      (is (= {\a '(0) \b '(1 0) \c '(1 1)} (composeEncodingTableFromSymbolSeq char-< '(\c \b \a \a))))
+      (is (= {\a '(0 0) \b '(0 1) \c '(1 0) \d '(1 1 0) \e '(1 1 1)} (composeEncodingTableFromSymbolSeq char-< '(\a \b \c \d \e)))))))
 
 (deftest testEncode
   (testing "Encode"

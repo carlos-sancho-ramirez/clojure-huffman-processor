@@ -66,18 +66,28 @@
 
 (defn getKeyForMinVal
   "Given a map, returns the key within the map whose value is the minimum within the map."
-  [map]
-  (if (< (count map) 2) (first (keys map))
-    (get (reduce #(if (< (get %2 1) (get %1 1)) %2 %1) map) 0)))
+  [symbol-< givenMap]
+  (if (< (count givenMap) 2) (first (keys givenMap))
+    (get
+      (reduce
+        #(if
+           (or
+             (< (get %2 1) (get %1 1))
+             (and
+               (= (get %2 1) (get %1 1))
+               (symbol-<
+                 (apply symbol-min symbol-< (get %1 0))
+                 (apply symbol-min symbol-< (get %2 0)))))
+           %2 %1) givenMap) 0)))
 
 (defn composeLengthTable
   "Creates a new map whose key is the encoded symbol length, and values is a list of decoded symbols"
-  [frecMap]
+  [symbol-< frecMap]
   (loop [inMap (reduce #(assoc %1 (conj '() (get %2 0)) (get %2 1)) {} frecMap)
                outMap (reduce #(assoc %1 (get %2 0) 0) {} frecMap)]
     (if (< (count inMap) 2) outMap
-      (let [min1Key (getKeyForMinVal inMap)
-            min2Key (getKeyForMinVal (dissoc inMap min1Key))
+      (let [min1Key (getKeyForMinVal symbol-< inMap)
+            min2Key (getKeyForMinVal symbol-< (dissoc inMap min1Key))
             newSymbols (reduce #(conj %1 %2) min1Key min2Key)]
         (recur
           (assoc (dissoc inMap min1Key min2Key) newSymbols (+ (inMap min1Key) (inMap min2Key)))
@@ -122,9 +132,9 @@
    This function will count the amount of times a symbols is
    appearing and will assign shorter encoded symbols to the most probable symbols.
    The resulting map will have the symbols sorted within the same symbol length in ascending order."
-  [symbols]
+  [symbol-< symbols]
   (let [frecMap (reduce #(assoc %1 %2 (inc (get %1 %2 0))) {} symbols)
-        lengthPairsSeq (sort-by #(get %1 1) (sort-by #(get %1 0) (composeLengthTable frecMap)))]
+        lengthPairsSeq (sort-by #(get %1 1) (sort-by #(get %1 0) (composeLengthTable symbol-< frecMap)))]
     (composeEncodingTableFromLength lengthPairsSeq)))
 
 (defn encode
@@ -214,12 +224,11 @@
   (let [fileName "resources/lorem_ipsum.txt"
         outFileName "encoded.bin"
         frecMap (countChars fileName)
-        lengthPairsSeq (sort-by #(get %1 1) (sort-by #(get %1 0) (composeLengthTable frecMap)))
+        lengthPairsSeq (sort-by #(get %1 1) (sort-by #(get %1 0) (composeLengthTable #(< %1 %2) frecMap)))
         encTable (composeEncodingTableFromLength lengthPairsSeq)]
     (println frecMap)
     (println (reduce #(+ %1 %2) 0 (vals frecMap)) "characters read")
     (println (composeTable frecMap))
-    (println (getKeyForMinVal frecMap))
     (println lengthPairsSeq)
     (println "InvertSeq:" (invertSeq '(1 0 1 0 0)))
     (println "incSeqValue:" (incSeqValue '(0 0)))
