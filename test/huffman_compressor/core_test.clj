@@ -2,6 +2,13 @@
   (:require [clojure.test :refer :all]
             [huffman-compressor.core :refer :all]))
 
+(deftest testSymbolMin
+  (testing "symbol-min"
+    (let [char-< #(< (int %1) (int %2))]
+      (is (= \c (symbol-min char-< \c)))
+      (is (= \D (symbol-min char-< \c \D)))
+      (is (= \a (symbol-min char-< \b \c \a \d))))))
+
 (deftest testComposeEncodingTableFromSymbolSeq
   (testing "ComposeEncodingTableFromSymbolSeq"
     (is (= {} (composeEncodingTableFromSymbolSeq '())))

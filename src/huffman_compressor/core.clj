@@ -1,6 +1,13 @@
 (ns huffman-compressor.core
   (:gen-class))
 
+(defn symbol-min
+  "Take a collection of arbitrary symbols and returns the minimum symbol according to the given function"
+  [symbol-< x & xs]
+  (if (empty? xs) x
+    (let [next (first xs)]
+      (apply symbol-min symbol-< (if (symbol-< x next) x next) (rest xs)))))
+
 (defn countChars [fileName]
   (with-open [rdr (clojure.java.io/reader fileName)]
     (loop [result {}]
